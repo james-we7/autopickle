@@ -2,16 +2,23 @@ root_dir = File.dirname(__FILE__);
 
 require 'optparse'
 
-local_config = 'local-config.rb'
+options = { :local_config => 'local-config.rb' }
 OptionParser.new do |opts|
-  opts.on('-f [ARG]', '--config-file [ARG]', "The config file location (default: local-config.rb)") do |v|
-    local_config = v
+  opts.on('-c [ARG]', '--config-file [ARG]', "The config file location (default: local-config.rb)") do |v|
+    options[:local_config] = v
+  end
+  opts.on('-f [ARG]', '--features-dir [ARG]', "The location of the directory containing the feature files") do |v|
+    options[:features_dir] = v
   end
 end.parse!
 
 require 'sinatra'
 require File.join(root_dir, 'autopickle')
-require File.join(root_dir, local_config)
+require File.join(root_dir, options[:local_config])
+
+if options[:features_dir] !=  nil
+  GHERKIN_ROOT_DIR = options[:features_dir]
+end
 
 set :bind, '0.0.0.0'
 

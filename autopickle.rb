@@ -114,9 +114,13 @@ class GherkinDictionary
 
 	def load_examples_from_file(file)
 		File.open(file).each do |line|
+                    begin
 			if matches = line.match(/^\s*(?:given|when|then|and|but)\s*(.*)/i)
 				set_example(matches[1])
 			end
+                    rescue ArgumentError
+                        # probably due to invalid characters
+                    end
 		end
 	end
 

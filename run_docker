@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+# Docker assumes an image named guvera/autopickle already exists. If it does not, run:
+#
+# docker build -t guvera/autopickle docker
+#
+
+RADIOSITE=/scratch/git/we7/radio-site
+
+echo $RADIOSITE
+
+if [ $1 ]; then
+  RADIOSITE=$1
+fi
+
+echo $RADIOSITE
+
+docker run --rm -p 4567:4567 -w /autopickle -v $RADIOSITE:/radio-site -v `pwd`:/autopickle -t guvera/autopickle ruby /autopickle/autopickle-gui.rb -f /radio-site/cucumberTest/watir/features
