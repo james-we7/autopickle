@@ -10,8 +10,6 @@ CMD="ruby /autopickle/autopickle-gui.rb -f /radio-site/cucumberTest/watir/featur
 
 IDS=$(docker ps --no-trunc | grep -v 'CONTAINER ID' | grep "$CMD" | awk '{print $1}')
 
-echo "RADIOSITE: $RADIOSITE"
-
 if [[ -n $IDS ]]; then
   echo "Removing previous AutoPickle container..."
   echo $IDS | xargs docker stop $ID 1>/dev/null
