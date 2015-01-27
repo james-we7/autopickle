@@ -17,6 +17,7 @@ require File.join(root_dir, 'autopickle')
 begin
   require File.join(root_dir, options[:local_config])
 rescue LoadError
+  require File.join(root_dir, 'local-config.rb.example')
 end
 
 if options[:features_dir] !=  nil
