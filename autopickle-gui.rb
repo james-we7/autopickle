@@ -14,7 +14,10 @@ end.parse!
 
 require 'sinatra'
 require File.join(root_dir, 'autopickle')
-require File.join(root_dir, options[:local_config])
+begin
+  require File.join(root_dir, options[:local_config])
+rescue LoadError
+end
 
 if options[:features_dir] !=  nil
   GHERKIN_ROOT_DIR = options[:features_dir]
