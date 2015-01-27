@@ -15,4 +15,8 @@ fi
 
 echo $RADIOSITE
 
-docker run -d -p 4567:4567 -w /autopickle -v $RADIOSITE:/radio-site -v `pwd`:/autopickle -t guvera/autopickle ruby /autopickle/autopickle-gui.rb -f /radio-site/cucumberTest/watir/features
+ID=$(docker run -d -p 4567:4567 -w /autopickle -v $RADIOSITE:/radio-site -v `pwd`:/autopickle -t guvera/autopickle ruby /autopickle/autopickle-gui.rb -f /radio-site/cucumberTest/watir/features)
+
+docker wait $ID
+docker stop $ID
+docker rm $ID
