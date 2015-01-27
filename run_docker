@@ -15,4 +15,4 @@ fi
 
 echo $RADIOSITE
 
-docker run --rm -p 4567:4567 -w /autopickle -v $RADIOSITE:/radio-site -v `pwd`:/autopickle -t guvera/autopickle ruby /autopickle/autopickle-gui.rb -f /radio-site/cucumberTest/watir/features
+docker run -d -p 4567:4567 -w /autopickle -v $RADIOSITE:/radio-site -v `pwd`:/autopickle -t guvera/autopickle ruby /autopickle/autopickle-gui.rb -f /radio-site/cucumberTest/watir/features
