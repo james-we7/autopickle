@@ -5,10 +5,12 @@
 # docker build -t guvera/autopickle docker
 #
 
-RADIOSITE=$1 || /scratch/git/we7/radio-site
+RADIOSITE=${1:-/scratch/git/we7/radio-site}
 CMD="ruby /autopickle/autopickle-gui.rb -f /radio-site/cucumberTest/watir/features"
 
 IDS=$(docker ps --no-trunc | grep -v 'CONTAINER ID' | grep "$CMD" | awk '{print $1}')
+
+echo "RADIOSITE: $RADIOSITE"
 
 if [[ -n $IDS ]]; then
   echo "Removing previous AutoPickle container..."
