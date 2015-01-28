@@ -11,15 +11,7 @@
 FROM docker.we7.local/blinkboxmusic/debian:wheezy
 MAINTAINER Gus Robinson  <gus@blinkbox.com>
 
-#RUN apt-get update -qq && apt-get install -y locales -qq && locale-gen en_US.UTF-8 en_us && dpkg-reconfigure locales && dpkg-reconfigure locales && locale-gen C.UTF-8 && /usr/sbin/update-locale LANG=C.UTF-8
-
-RUN apt-get update -qq
-RUN apt-get install locales
-
-RUN locale-gen en_US.UTF-8  
-ENV LANG en_US.UTF-8  
-ENV LANGUAGE en_US:en  
-ENV LC_ALL en_US.UTF-8  
+RUN apt-get update -qq && apt-get install -y locales -qq && locale-gen en_US.UTF-8 en_us && dpkg-reconfigure locales && dpkg-reconfigure locales && locale-gen C.UTF-8 && /usr/sbin/update-locale LANG=C.UTF-8
 
 RUN apt-get -qqy install ruby ruby-dev
 RUN apt-get -qq install build-essential
