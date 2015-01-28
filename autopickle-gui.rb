@@ -26,6 +26,8 @@ end
 
 set :bind, '0.0.0.0'
 
+set :bind, '0.0.0.0'
+
 dic = GherkinDictionary.new(GHERKIN_ROOT_DIR)
 
 get '/' do
