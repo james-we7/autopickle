@@ -21,8 +21,9 @@ var statement_list = {
     }
   },
 
-  new: function() {
-  	var new_command = prompt("Create a new command for use in this test", "Please type your new command here");
+  new: function(suggestion) {
+    suggestion = suggestion || "Please type your new command here";
+  	var new_command = prompt("Create a new command for use in this test", suggestion);
   	if(new_command) {
       this.add(new_command+"*");
     }
@@ -40,7 +41,13 @@ var statement_list = {
   	  command.values = {};
   	  for(var i=0; vars && i<vars.length; i++) {
         var varname = vars[i].slice(1, -1);
-  	  	command.values[varname] = this.get_variable_value(command, varname, "");
+        var response = this.get_variable_value(command, varname, "");
+        if(response) {
+    	  	command.values[varname] = response;
+        }
+        else {
+          return false;
+        }
   	  }
   	}
 
@@ -134,7 +141,7 @@ var statement_list = {
       item.statement.values[varname] = new_value || item.statement.values[varname];
     }
     else {
-      new_value = prompt("New Value", el.innerText);
+      new_value = prompt("New Value", el.innerText) || el.innerText;
     }
     el.innerText = new_value;
 
