@@ -8,8 +8,8 @@
 #
 # YOU DO NOT HAVE TO DO THE ABOVE UNLESS THE registry image needs updating
 #
-FROM docker.we7.local/blinkboxmusic/debian:wheezy
-MAINTAINER Gus Robinson  <gus@blinkbox.com>
+FROM debian:wheezy
+MAINTAINER Trevor Stedman <trevor.stedman@gmail.com>
 
 RUN apt-get update -qq && apt-get install -y locales -qq && locale-gen en_US.UTF-8 en_us && dpkg-reconfigure locales && dpkg-reconfigure locales && locale-gen C.UTF-8 && /usr/sbin/update-locale LANG=C.UTF-8
 
