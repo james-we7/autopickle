@@ -20,3 +20,8 @@ ADD Gemfile Gemfile
 RUN bundle install
 
 EXPOSE 4567
+
+ENTRYPOINT ["ruby", "/autopickle/autopickle-gui.rb", "-f", "/repo"]
+
+ADD *.rb /autopickle/
+ADD public /autopickle/public

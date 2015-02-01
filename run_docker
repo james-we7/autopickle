@@ -7,7 +7,6 @@
 
 REPO=${1:-/scratch/git/we7/radio-site}
 PORT=${2:-4567}
-CMD="ruby /autopickle/autopickle-gui.rb -f /repo"
 
 IDS=$(docker ps --no-trunc | grep -v 'CONTAINER ID' | grep "0.0.0.0:$PORT->4567/tcp" | awk '{print $1}')
 
@@ -18,4 +17,4 @@ if [[ -n $IDS ]]; then
   echo "Done :-)"
 fi
 
-docker run -d -p $PORT:4567 -w /autopickle -v $REPO:/repo -v `pwd`:/autopickle -t guvera/autopickle $CMD
+docker run -d -p $PORT:4567 -v $REPO:/repo -t guvera/autopickle
