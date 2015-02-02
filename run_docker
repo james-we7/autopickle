@@ -2,7 +2,7 @@
 #
 # Docker assumes an image named guvera/autopickle already exists. If it does not, run:
 #
-# docker build -t guvera/autopickle docker
+# docker build -t docker.we7.local/guvera/autopickle .
 #
 
 REPO=${1:-/scratch/git/we7/radio-site}
@@ -17,4 +17,4 @@ if [[ -n $IDS ]]; then
   echo "Done :-)"
 fi
 
-docker run -d -p $PORT:4567 -v $REPO:/repo -t guvera/autopickle
+docker run -d -p $PORT:4567 -v $REPO:/repo -t docker.we7.local/guvera/autopickle
