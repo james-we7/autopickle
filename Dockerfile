@@ -21,7 +21,11 @@ RUN bundle install
 
 EXPOSE 4567
 
-ENTRYPOINT ["ruby", "/autopickle/autopickle-gui.rb", "-f", "/repo"]
+ENTRYPOINT ["ruby", "/autopickle/autopickle-gui.rb", "--directory", "/repo"]
+CMD ["--language", "ruby"]
+
+VOLUME ["/repo"]
 
 ADD *.rb /autopickle/
+ADD include/ /autopickle/include
 ADD public /autopickle/public
