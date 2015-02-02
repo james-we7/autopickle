@@ -9,7 +9,7 @@ REPO=${1:-/scratch/git/we7/radio-site}
 PORT=${2:-4567}
 LANG=${3:-ruby}
 
-IDS=$(docker ps --no-trunc | grep -v 'CONTAINER ID' | grep "0.0.0.0:$PORT->4567/tcp" | awk '{print $1}')
+IDS=$(docker ps -a --no-trunc | grep -v 'CONTAINER ID' | grep "0.0.0.0:$PORT->4567/tcp" | awk '{print $1}')
 
 if [[ -n $IDS ]]; then
   echo "Removing previous AutoPickle container..."
