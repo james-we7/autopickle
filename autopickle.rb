@@ -1,187 +1,78 @@
 #!/usr/bin/ruby
 
-root_dir = File.dirname(__FILE__);
+root_dir = File.dirname(__FILE__)
 
 require 'json'
+require 'optparse'
+require File.join(root_dir, 'include', 'lang-config')
+require File.join(root_dir, 'include', 'gherkin')
 
-class LangConfig
-	attr_accessor :step_pattern, :param_delimiter_pattern, :step_fileglob, :feature_fileglob
+# Declare defaults, so they can be overridden in local-config file if desired 
+$gherkin_root_dir = nil
+$step_definition_lang = nil
+$cli_output_format = "raw"
 
-	def initialize(step_pattern, param_delimiter_pattern, step_fileglob, feature_fileglob)
-		@step_pattern = step_pattern
-		@param_delimiter_pattern = param_delimiter_pattern
-		@step_fileglob = step_fileglob
-		@feature_fileglob = feature_fileglob
-	end
-
+# Load local-config file if it exists
+config_file = File.join(root_dir, 'local-config.rb')
+if File.exists? config_file
+	require config_file
 end
 
-class GherkinFunction
+# Parse CLI params (any collisions override values defined in local-config file)
+OptionParser.new do |opts|
+  opts.on('-d', '--directory [GHERKIN_PATH]', "Path to the directory containing your cucumber step definitions and feature files") do |val|
+    $gherkin_root_dir = val
+    if !Dir.exists? $gherkin_root_dir
+    	puts "Error: Cucumber tests directory '#{$gherkin_root_dir}' does not exist"
+    	exit 1
+    end
+  end
+  opts.on('-l', '--language [LANG]', "Language your cucumber step-definitions are written in") do |val|
+    $step_definition_lang = val
+    if $lang_config[$step_definition_lang].nil?
+    	puts "Error: Invalid language '#{$step_definition_lang}' - valid values are #{$lang_config.keys}"
+    	exit 1
+    end
+  end
+  opts.on('-j', '--json', "Output command-line results in json format") do |val|
+    $cli_output_format = "json"
+  end
+  opts.on('-r', '--raw', "Output command-line results in raw format") do |val|
+    $cli_output_format = "raw"
+  end
+  opts.on('-e', '--examples', "Output command-line results in raw format, but with examples of usage") do |val|
+    $cli_output_format = "examples"
+  end
 
-	attr_accessor :pattern, :function, :params, :examples
+end.parse!
 
-	def initialize(pattern, params)
-		params.strip!	# Get rid of any leading/trailing whitespace that's hard to exclude using config regexps
-		backref_pattern = /(?<!\\)(\([^?][^)]*[^\\]\))/
-		@pattern = pattern
-		names = params.is_a?(Array) ? params : params.split(CONFIG.param_delimiter_pattern)
-		backrefs = pattern.scan(backref_pattern).to_a.flatten
-		@params = backrefs.zip(names)
-		@function = unescape_regex_special_chars(@pattern.gsub(/^\^|\$$/, '').gsub("%", "%%").gsub(backref_pattern, "%s") % names.map{|n| '{'+n+'}' })
-		@examples = []
-	end
-
-	def matches(str)
-		return str.match(@pattern)
-	end
-
-	def matches_function(str)
-		return @function.downcase.include? str.downcase
-	end
-
-	def unescape_regex_special_chars(str)
-		map = Hash.new { |hash,key| key } # simple trick to return key if there is no value in hash
-		map['t'] = "\t"
-		map['n'] = "\n"
-		map['r'] = "\r"
-		map['f'] = "\f"
-		map['v'] = "\v"
-
-		return str.gsub(/\\(.)/){ map[$1] }
-	end
-
-	def to_s
-		return @function
-	end
-
-	def to_json
-		return "{
-  \"pattern\":\"#{@pattern.gsub(/\\([^\\])/, '\\\\\\\\\1').gsub('"', '\\"')}\",
-  \"function\":\"#{@function.gsub(/\\([^\\])/, '\1').gsub('"', '\\"')}\",
-  \"params\":#{JSON.dump(@params)},
-  \"examples\":#{@examples}
-}"
-	end
-
-	def help
-		help = self.to_s
-		if @params.length > 0
-			help += "\n" + examples.map { |example| "\tExample: "+example }.join("\n")
-		end
-		return help
-	end
-
+if $gherkin_root_dir.nil?
+	puts "Error: $gherkin_root_dir not set - either provide a --directory parameter or set a default value in local-config.rb"
 end
 
-class GherkinDictionary
-
-	attr_accessor :terms
-
-	def initialize(path_or_array)
-		@terms = []
-		@files = []
-		@example_files = []
-		if path_or_array.is_a?(Array)
-			@terms = path_or_array	# Construct new dictionary from an existing array of terms
-		elsif path_or_array.is_a?(String) && Dir.exists?(path_or_array)
-			init_from_path(path_or_array)	# else populate by parsing a directory full of step_definition and feature files 
-			load_examples_from_path(path_or_array)
-			dedupe_examples
-		end
-	end
-
-	def init_from_path(path)
-		#files = Dir[path+"/**/errCode.rb"]
-		files = Dir[path+CONFIG.step_fileglob]
-		files.each { |file| load_from_file(file) }
-	end
-
-	def load_from_file(file)
-		File.open(file).each do |line|
-			# When(/^I type link in "(.*?)"$/) do |arg1|
-			if matches = line.match(CONFIG.step_pattern)
-				@terms.push(GherkinFunction.new(matches[2], matches[3])) 
-			end
-		end
-	end
-
-	def load_examples_from_path(path)
-		#example_files = Dir[path+"/**/errCode.feature"]
-		example_files = Dir[path+CONFIG.feature_fileglob]
-		example_files.each { |file|
-			load_examples_from_file(file)
-		}
-	end
-
-	def load_examples_from_file(file)
-		File.open(file).each do |line|
-                    begin
-			if matches = line.match(/^\s*(?:given|when|then|and|but)\s*(.*)/i)
-				set_example(matches[1])
-			end
-                    rescue ArgumentError
-                        # probably due to invalid characters
-                    end
-		end
-	end
-
-	def add(new_term)
-		@terms.push(new_term)
-	end
-
-	def set_example(example)
-		@terms.each do |entry|
-			if example.match(entry.pattern) && example.downcase != entry.function
-				entry.examples.push(example)
-			end
-		end
-	end
-
-	def dedupe_examples
-		@terms.each { |entry| entry.examples = entry.examples.uniq }
-	end
-
-	def find_terms(str)
-		return self.class.new(@terms.select { |term| term.matches_function(str) })
-	end
-
-	def [](index)
-		return @terms[index]
-	end
-
-	def length
-		return @terms.length
-	end
-
-	def to_s
-		return @terms.map { |term| term.to_s }.join("\n")
-	end
-
-	def to_json
-		return '[' + @terms.map { |term| term.to_json }.join(",\n") + ']'
-	end
-
-	def help
-		return @terms.map { |term| term.help }.join("\n")
-	end
+if $step_definition_lang.nil?
+	puts "Error: $step_definition_lang not set - either provide a --language parameter or set a default value in local-config.rb"
 end
 
+if $gherkin_root_dir.nil? || $step_definition_lang.nil?
+	exit 1
+end
+
+$lang = $lang_config[$step_definition_lang]
+
+$dictionary = GherkinDictionary.new($gherkin_root_dir)
 
 if(ARGV[0])
-	require File.join(root_dir, 'local-config')
-	dictionary = GherkinDictionary.new(GHERKIN_ROOT_DIR)
-	results = dictionary.find_terms(ARGV[0])
+	results = $dictionary.find_terms(ARGV[0])
 	if results.length == 0
 		puts " -- No results found -- "
-	elsif !ARGV[1].nil?
-		if ARGV[1] == '--json'
+	else
+		if $cli_output_format == 'json'
 			puts results.to_json
-		elsif ARGV[1] == '--raw'
+		elsif $cli_output_format == 'raw'
 			puts results.to_s
-		elsif ARGV[1] == '--help'
+		elsif $cli_output_format == 'examples'
 			puts results.help
 		end
-	else
-		puts results.to_s
 	end
 end
