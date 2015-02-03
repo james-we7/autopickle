@@ -81,8 +81,12 @@ class GherkinDictionary
 
 	def load_from_file(file)
 		File.read(file).scan($lang.step_pattern) do |command, params|
-			if $lang.escape_char
-				command.gsub!("#{$lang.escape_char}#{$lang.escape_char}", $lang.escape_char)
+			begin
+				if $lang.escape_char
+					command.gsub!("#{$lang.escape_char}#{$lang.escape_char}", $lang.escape_char)
+				end
+			rescue ArgumentError
+				# ignore this error
 			end
 
 			@terms.push(GherkinFunction.new(command, params)) 
